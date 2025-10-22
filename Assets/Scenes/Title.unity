@@ -838,6 +838,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5c58c0825535274aba674ed109eb750, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HostClient
+  _positions:
+  - {x: 2, y: 1, z: 2}
+  - {x: 2, y: 1, z: -2}
+  - {x: -2, y: 1, z: -2}
+  - {x: -2, y: 1, z: 2}
+  _maxConnectedClientsCount: 4
 --- !u!114 &1466781804
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -883,13 +889,13 @@ MonoBehaviour:
   NetworkConfig:
     ProtocolVersion: 0
     NetworkTransport: {fileID: 1466781804}
-    PlayerPrefab: {fileID: 3245750360037558572, guid: 30b7a5091464fdf499ba60d69ba9d7a7, type: 3}
+    PlayerPrefab: {fileID: 9081058224440207312, guid: 30b7a5091464fdf499ba60d69ba9d7a7, type: 3}
     Prefabs:
       NetworkPrefabsLists:
       - {fileID: 11400000, guid: 38bf94c7fb563274286c9641c032a6c3, type: 2}
     TickRate: 30
     ClientConnectionBufferTimeout: 10
-    ConnectionApproval: 0
+    ConnectionApproval: 1
     ConnectionData: 
     EnableTimeResync: 0
     TimeResyncInterval: 30

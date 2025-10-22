@@ -5,9 +5,9 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(Rigidbody))]
 public class NetworkPlayer : NetworkBehaviour
 {
-    [SerializeField] float _movePower = 10;
+    [SerializeField] float _moveSpeed = 10;
     [SerializeField] float _jumpPower = 10;
-    [SerializeField] LayerMask _groundLayer;
+    [SerializeField] float _gravityScale = 5;
 
     Rigidbody _rb;
     InputAction _moveAct;
@@ -27,12 +27,12 @@ public class NetworkPlayer : NetworkBehaviour
 
     private void OnEnable()
     {
-        _jumpAct.started += Jump;
+
     }
 
     private void OnDisable()
     {
-        _jumpAct.started -= Jump;
+
     }
 
     /// <summary>
@@ -53,7 +53,7 @@ public class NetworkPlayer : NetworkBehaviour
         //オーナーの時
         if (IsOwner)
         {
-            PlayerMoveServerRpc(_moveAct.ReadValue<Vector2>(), _jumpAct.IsPressed());
+            PlayerMoveServerRpc(_moveAct.ReadValue<Vector2>(), _jumpAct.triggered);
         }
 
         //サーバーの時
@@ -63,15 +63,15 @@ public class NetworkPlayer : NetworkBehaviour
         }
     }
 
-    /// <summary>
-    /// ジャンプを行う関数
-    /// </summary>
-    /// <param name="context"></param>
-    void Jump(InputAction.CallbackContext context)
+    private void FixedUpdate()
     {
-        //_isJump = true;
+        if (IsServer)
+        {
+            ServerFixedUpdate();
+        }
     }
 
+    #region サーバー
     /// <summary>
     /// 移動入力を設定する関数
     /// クライアントからサーバーにアクションを起こす
@@ -79,32 +79,48 @@ public class NetworkPlayer : NetworkBehaviour
     [ServerRpc]
     void PlayerMoveServerRpc(Vector2 direction, bool isJump)
     {
-        _direction = new Vector3(direction.x, 0, direction.y);
+        _direction = new Vector3(direction.x, 0, direction.y).normalized;
         _isJump = isJump;
-
-        //if (_isJump)
-        //{
-        //    _rb.AddForce(transform.up * _jumpPower, ForceMode.Impulse);
-        //}
     }
 
+    /// <summary>
+    /// 瞬間操作
+    /// サーバーからアクションを受け取る
+    /// </summary>
     void ServerUpdate()
     {
-        _rb.AddForce(_direction * _movePower);
-        if (_isJumping)
+        if (!_isJumping)
         {
             if (_isJump)
             {
+                var vel = _rb.linearVelocity;
+                vel.y = 0;
+                _rb.linearVelocity = vel;
                 _rb.AddForce(Vector3.up * _jumpPower, ForceMode.Impulse);
             }
         }
     }
 
+    /// <summary>
+    /// 継続操作
+    /// サーバーからアクションを受け取る
+    /// </summary>
+    void ServerFixedUpdate()
+    {
+        if (_isJumping)
+        {
+            _rb.linearVelocity -= Vector3.up * 9.8f * _gravityScale * Time.deltaTime;
+        }
+
+        _rb.linearVelocity = _direction * _moveSpeed + Vector3.up * _rb.linearVelocity.y;
+    }
+    #endregion
+
     private void OnCollisionEnter(Collision collision)
     {
         if (collision.gameObject.tag == "Ground")
         {
-            _isJumping = true;
+            _isJumping = false;
         }
     }
 
@@ -112,7 +128,7 @@ public class NetworkPlayer : NetworkBehaviour
     {
         if (collision.gameObject.tag == "Ground")
         {
-            _isJumping = false;
+            _isJumping = true;
         }
     }
 }
