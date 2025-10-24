@@ -12,11 +12,13 @@ public class NetworkPlayer : NetworkBehaviour
     Rigidbody _rb;
     InputAction _moveAct;
     InputAction _jumpAct;
+    InputAction _connectAct;
 
     Vector3 _direction;
 
     bool _isJump;
     bool _isJumping;
+    bool _isConnect;
 
     #region 初期設定
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -44,16 +46,23 @@ public class NetworkPlayer : NetworkBehaviour
 
         _moveAct = InputSystem.actions.FindAction("Move");
         _jumpAct = InputSystem.actions.FindAction("Jump");
+        _connectAct = InputSystem.actions.FindAction("Connect");
+
+        if (tag != TagManager.PlayerTag)
+        {
+            tag = TagManager.PlayerTag;
+        }
     }
     #endregion
 
     // Update is called once per frame
     void Update()
     {
-        //オーナーの時
+        //接続した際に生成されたこのオブジェクトのみを操作できるようにする
         if (IsOwner)
         {
             PlayerMoveServerRpc(_moveAct.ReadValue<Vector2>(), _jumpAct.triggered);
+            StretchConnectorServerRpc(_connectAct.triggered);
         }
 
         //サーバーの時
@@ -84,6 +93,15 @@ public class NetworkPlayer : NetworkBehaviour
     }
 
     /// <summary>
+    /// コネクトアクションを検知する関数
+    /// </summary>
+    [ServerRpc]
+    void StretchConnectorServerRpc(bool isConnect)
+    {
+        _isConnect = isConnect;
+    }
+
+    /// <summary>
     /// 瞬間操作
     /// サーバーからアクションを受け取る
     /// </summary>
@@ -98,6 +116,15 @@ public class NetworkPlayer : NetworkBehaviour
                 _rb.linearVelocity = vel;
                 _rb.AddForce(Vector3.up * _jumpPower, ForceMode.Impulse);
             }
+        }
+        if (_direction.magnitude != 0)
+        {
+            transform.forward = _direction;
+        }
+
+        if (_isConnect)
+        {
+
         }
     }
 
