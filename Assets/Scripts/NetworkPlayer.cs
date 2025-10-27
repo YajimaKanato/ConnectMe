@@ -8,6 +8,7 @@ public class NetworkPlayer : NetworkBehaviour
     [SerializeField] float _moveSpeed = 10;
     [SerializeField] float _jumpPower = 10;
     [SerializeField] float _gravityScale = 5;
+    [SerializeField] Transform _camera;
 
     Rigidbody _rb;
     InputAction _moveAct;
@@ -89,6 +90,7 @@ public class NetworkPlayer : NetworkBehaviour
     void PlayerMoveServerRpc(Vector2 direction, bool isJump)
     {
         _direction = new Vector3(direction.x, 0, direction.y).normalized;
+        _direction = Quaternion.Euler(0, _camera.eulerAngles.y, 0) * _direction;
         _isJump = isJump;
     }
 

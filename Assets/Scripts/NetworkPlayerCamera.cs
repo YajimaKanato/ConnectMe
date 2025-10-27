@@ -4,8 +4,15 @@ using UnityEngine.InputSystem;
 
 public class NetworkPlayerCamera : NetworkBehaviour
 {
+    [SerializeField] float _cameraSensitivity = 0.5f;
+    [SerializeField] Transform _player;
+    Vector3 _defaultRot;
     InputAction _cameraAct;
-    Vector2 _rot;
+
+    private void Awake()
+    {
+        _defaultRot = transform.eulerAngles;
+    }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -16,6 +23,7 @@ public class NetworkPlayerCamera : NetworkBehaviour
     void Init()
     {
         _cameraAct = InputSystem.actions.FindAction("Look");
+        transform.SetParent(null);
     }
 
     // Update is called once per frame
@@ -36,12 +44,15 @@ public class NetworkPlayerCamera : NetworkBehaviour
     [ServerRpc]
     void CameraControlServerRpc(Vector2 rotation)
     {
-        _rot = rotation;
+        _defaultRot.x -= rotation.y;
+        _defaultRot.y += rotation.x;
     }
 
     void ServerUpdate()
     {
-        transform.rotation = transform.rotation * Quaternion.Euler(_rot);
+        transform.rotation = Quaternion.Euler(_defaultRot);
+
+        transform.position = _player.position;
     }
     #endregion
 }
