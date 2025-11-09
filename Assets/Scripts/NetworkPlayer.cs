@@ -8,7 +8,7 @@ public class NetworkPlayer : NetworkBehaviour
     [SerializeField] float _moveSpeed = 10;
     [SerializeField] float _jumpPower = 10;
     [SerializeField] float _gravityScale = 5;
-    [SerializeField] Transform _camera;
+    [SerializeField] GameObject _camera;
 
     Rigidbody _rb;
     InputAction _moveAct;
@@ -16,6 +16,7 @@ public class NetworkPlayer : NetworkBehaviour
     InputAction _connectAct;
 
     Vector3 _direction;
+    Vector3 _defaultRot;
 
     bool _isJump;
     bool _isJumping;
@@ -81,6 +82,15 @@ public class NetworkPlayer : NetworkBehaviour
         }
     }
 
+    public override void OnNetworkSpawn()
+    {
+        if (IsOwner)
+        {
+            var go = Instantiate(_camera, transform.position, Quaternion.identity);
+            go.GetComponent<NetworkPlayerCamera>().Player = this.transform;
+        }
+    }
+
     #region サーバー
     /// <summary>
     /// 移動入力を設定する関数
@@ -90,7 +100,7 @@ public class NetworkPlayer : NetworkBehaviour
     void PlayerMoveServerRpc(Vector2 direction, bool isJump)
     {
         _direction = new Vector3(direction.x, 0, direction.y).normalized;
-        _direction = Quaternion.Euler(0, _camera.eulerAngles.y, 0) * _direction;
+        _direction = Quaternion.Euler(0, _camera.transform.eulerAngles.y, 0) * _direction;
         _isJump = isJump;
     }
 

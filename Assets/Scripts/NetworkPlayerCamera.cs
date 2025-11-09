@@ -1,11 +1,17 @@
 using Unity.Netcode;
+using Unity.Netcode.Components;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class NetworkPlayerCamera : NetworkBehaviour
+public class NetworkPlayerCamera : MonoBehaviour
 {
     [SerializeField] float _cameraSensitivity = 0.5f;
-    [SerializeField] Transform _player;
+    Transform _player;
+    public Transform Player
+    {
+        get { return _player; }
+        set { if (!_player) _player = value; }
+    }
     Vector3 _defaultRot;
     InputAction _cameraAct;
 
@@ -23,20 +29,20 @@ public class NetworkPlayerCamera : NetworkBehaviour
     void Init()
     {
         _cameraAct = InputSystem.actions.FindAction("Look");
-        transform.SetParent(null);
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (IsOwner)
+        //if (IsOwner)
         {
-            CameraControlServerRpc(_cameraAct.ReadValue<Vector2>());
-        }
-
-        if (IsServer)
-        {
-            ServerUpdate();
+            //CameraControlServerRpc(_cameraAct.ReadValue<Vector2>());
+            //ServerUpdate();
+            var rot = _cameraAct.ReadValue<Vector2>();
+            _defaultRot.x -= rot.y;
+            _defaultRot.y += rot.x;
+            transform.rotation = Quaternion.Euler(_defaultRot);
+            transform.position = _player.position;
         }
     }
 
