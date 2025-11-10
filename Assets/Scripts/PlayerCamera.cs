@@ -1,9 +1,8 @@
-using Unity.Netcode;
-using Unity.Netcode.Components;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class NetworkPlayerCamera : MonoBehaviour
+/// <summary>ローカルな存在</summary>
+public class PlayerCamera : MonoBehaviour
 {
     [SerializeField] float _cameraSensitivity = 0.5f;
     Transform _player;
@@ -34,10 +33,8 @@ public class NetworkPlayerCamera : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        //if (IsOwner)
+        if (_player)
         {
-            //CameraControlServerRpc(_cameraAct.ReadValue<Vector2>());
-            //ServerUpdate();
             var rot = _cameraAct.ReadValue<Vector2>();
             _defaultRot.x -= rot.y;
             _defaultRot.y += rot.x;
@@ -45,20 +42,4 @@ public class NetworkPlayerCamera : MonoBehaviour
             transform.position = _player.position;
         }
     }
-
-    #region サーバー
-    [ServerRpc]
-    void CameraControlServerRpc(Vector2 rotation)
-    {
-        _defaultRot.x -= rotation.y;
-        _defaultRot.y += rotation.x;
-    }
-
-    void ServerUpdate()
-    {
-        transform.rotation = Quaternion.Euler(_defaultRot);
-
-        transform.position = _player.position;
-    }
-    #endregion
 }

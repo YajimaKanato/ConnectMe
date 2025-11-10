@@ -10,6 +10,8 @@ public class NetworkPlayer : NetworkBehaviour
     [SerializeField] float _gravityScale = 5;
     [SerializeField] GameObject _camera;
 
+    //ローカルなTransformのためサーバーには送られない
+    Transform _cameraTransform;
     Rigidbody _rb;
     InputAction _moveAct;
     InputAction _jumpAct;
@@ -63,8 +65,16 @@ public class NetworkPlayer : NetworkBehaviour
         //接続した際に生成されたこのオブジェクトのみを操作できるようにする
         if (IsOwner)
         {
-            PlayerMoveServerRpc(_moveAct.ReadValue<Vector2>(), _jumpAct.triggered);
-            StretchConnectorServerRpc(_connectAct.triggered);
+            if (_cameraTransform)
+            {
+                var direction = _moveAct.ReadValue<Vector2>();
+                var move = new Vector3(direction.x, 0, direction.y).normalized;
+                //ServerRpcのAttributeをつけた関数に送るとローカルなものは削除される？
+                //そのため送る前に計算する
+                move = Quaternion.Euler(0, _cameraTransform.eulerAngles.y, 0) * move;
+                PlayerMoveServerRpc(move, _jumpAct.triggered);
+                StretchConnectorServerRpc(_connectAct.triggered);
+            }
         }
 
         //サーバーの時
@@ -87,7 +97,9 @@ public class NetworkPlayer : NetworkBehaviour
         if (IsOwner)
         {
             var go = Instantiate(_camera, transform.position, Quaternion.identity);
-            go.GetComponent<NetworkPlayerCamera>().Player = this.transform;
+            go.GetComponent<PlayerCamera>().Player = this.transform;
+            _cameraTransform = go.transform;
+            DontDestroyOnLoad(go);
         }
     }
 
@@ -97,10 +109,9 @@ public class NetworkPlayer : NetworkBehaviour
     /// クライアントからサーバーにアクションを起こす
     /// </summary>
     [ServerRpc]
-    void PlayerMoveServerRpc(Vector2 direction, bool isJump)
+    void PlayerMoveServerRpc(Vector3 direction, bool isJump)
     {
-        _direction = new Vector3(direction.x, 0, direction.y).normalized;
-        _direction = Quaternion.Euler(0, _camera.transform.eulerAngles.y, 0) * _direction;
+        _direction = direction;
         _isJump = isJump;
     }
 

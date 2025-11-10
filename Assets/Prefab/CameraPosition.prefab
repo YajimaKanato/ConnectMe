@@ -45,7 +45,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2e0dba034addca443849391d5ad71f38, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NetworkPlayerCamera
-  ShowTopMostFoldoutHeaderGroup: 1
   _cameraSensitivity: 0.5
 --- !u!1 &7538123403483852458
 GameObject:
